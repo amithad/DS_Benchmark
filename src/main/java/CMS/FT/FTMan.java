@@ -97,12 +97,21 @@ public class FTMan {
         sendDSCommMsg(joinOkMsg, sendIP, sendPort);
     }
 
+    public String sendBSMsg(String message, boolean expectResponse) throws IOException {
+        return o_UDPClient.sendBSMsg(this.nodeID, message, expectResponse);
+    }
+
+    public void sendDSCommMsg(String msg, String sendIP, int sendPort) throws IOException {
+        o_UDPClient.sendDSCommMsg(msg, sendIP, sendPort);
+    }
+
     public boolean addNeighbour(Neighbour nbr) throws IOException {
         if (nbr != null) {
             boolean neighbourExists = false;
             Iterator<Neighbour> i = neighbourList.iterator();
             while (i.hasNext()) {
-                if (nbr.getNeighbourIP().equals(i.next().getNeighbourIP())) {
+                Neighbour temp =i.next();
+                if (nbr.getNeighbourIP().equals(temp.getNeighbourIP()) && nbr.getNeighbourPort() == temp.getNeighbourPort() ) {
                     neighbourExists = true;
                     break;
                 }
@@ -141,12 +150,12 @@ public class FTMan {
         return 0;
     }
 
-    public String sendBSMsg(String message, boolean expectResponse) throws IOException {
-        return o_UDPClient.sendBSMsg(this.nodeID, message, expectResponse);
-    }
-
-    public void sendDSCommMsg(String msg, String sendIP, int sendPort) throws IOException {
-        o_UDPClient.sendDSCommMsg(msg, sendIP, sendPort);
+    public void floodNeighbours(String msg) throws IOException {
+        Iterator<Neighbour> i = neighbourList.iterator();
+        while (i.hasNext()) {
+            Neighbour n = i.next();
+            sendDSCommMsg(msg, n.getNeighbourIP(), n.getNeighbourPort());
+        }
     }
 
     private InetAddress discoverMyIP() throws UnknownHostException {
@@ -161,7 +170,7 @@ public class FTMan {
         o_UDPClient.disconnectBS();
     }
 
-    protected void readDSMsg(String msg, String senderIP){
+    protected void readDSMsg(String msg, String senderIP) throws IOException {
         //override this method to get access to custom msg types.
     }
 
@@ -173,5 +182,13 @@ public class FTMan {
         String prefix = new Date().toString() + ": ";
         prefix += this.getNodeID() + ": ";
         System.out.println(prefix + msg);
+    }
+
+    public String getIPAddress(){
+        return myIP.getHostAddress();
+    }
+
+    public int getUDPServerPort(){
+        return UDPServerPort;
     }
 }

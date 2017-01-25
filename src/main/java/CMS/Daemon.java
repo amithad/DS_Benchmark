@@ -1,5 +1,7 @@
 package CMS;
 
+import org.apache.xmlrpc.XmlRpcException;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -53,7 +55,12 @@ public class Daemon {
         public void run() {
             try {
                 myNode.start();
-            } catch (IOException | InterruptedException e) {
+                if(myNode.getNodeID().equals("N0")){
+                    sleep(2000);
+                    //call the RPC here to execute.
+                    myNode.getRPCaller().multiply(45,20);
+                }
+            } catch (IOException | InterruptedException | XmlRpcException e) {
                 e.printStackTrace();
             }
         }

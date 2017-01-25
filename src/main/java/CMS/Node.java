@@ -11,14 +11,18 @@ import java.util.Vector;
 
 public class Node extends FTMan {
 
+    public static final int hopCount = 5;
+
     private Vector myRPCs = new Vector<>();
     private RPCServer o_RPCServer;
+    private RPCaller o_RPCaller;
     private int RPCServerPort;
     private boolean RPCInitialized = false;
     private boolean RPCServerReady = false;//accessed by RPCServer
 
     public Node(String BSIP, int BSPort) throws IOException {
         super(BSIP, BSPort);
+        o_RPCaller = new RPCaller(this);
     }
 
     public void start() throws IOException, InterruptedException {
@@ -35,6 +39,14 @@ public class Node extends FTMan {
         startRPC();
     }
 
+    public void startRPC() {
+        if (RPCInitialized) {
+            o_RPCServer.start();
+        } else {
+            echo("Configure RPC before starting.");
+        }
+    }
+
     public void invokeRPC(String rpc) { //adds RPCs to the list.
         myRPCs.addElement(rpc);
     }
@@ -45,31 +57,24 @@ public class Node extends FTMan {
         RPCInitialized = true;
     }
 
-    public boolean RPCIsSupported(String rpc){
-        for(int i = 0; i < myRPCs.size(); i++){
-            if(rpc.equals(myRPCs.get(i))){
+    public boolean RPCIsSupported(String rpc) {
+        for (int i = 0; i < myRPCs.size(); i++) {
+            if (rpc.equals(myRPCs.get(i))) {
                 return true;
             }
         }
         return false;
     }
 
-    public void sendRPCOK(String RPCall, String senderIP, int senderPort){
-
-    }
-
-    public void startRPC() {
-        if (RPCInitialized) {
-            o_RPCServer.start();
-        }
-        else{
-            echo("Configure RPC before starting.");
-        }
+    public void sendRPCOK(String RPCall, String senderIP,int senderPort) throws IOException {
+        String RPCOkMsg = "RPCOK";
+        RPCOkMsg += " " + RPCall + " " + senderIP + " " + getRPCServerPort();
+        sendDSCommMsg(RPCOkMsg, senderIP, senderPort);
     }
 
     @Override
-    protected void readDSMsg(String msg, String senderIP){
-        RPCServiceMsgDecoder.DecodeRPCMsg(this,msg,senderIP);
+    protected void readDSMsg(String msg, String senderIP) throws IOException {
+        RPCServiceMsgDecoder.DecodeRPCMsg(this, msg, senderIP);
     }
 
     public void RPCServerReady() {
@@ -80,4 +85,23 @@ public class Node extends FTMan {
         return RPCServerReady;
     }
 
+    public int getRPCServerPort(){
+        return RPCServerPort;
+    }
+
+    public boolean isWaitingToExecRPC(){
+        return o_RPCaller.isWaitingToExecRPC();
+    }
+
+    public void interruptWait(){
+        o_RPCaller.interruptWait();
+    }
+
+    public void setTargetVariables(String RPCTargetIP, int RPCTargetPort){
+        o_RPCaller.setTargetVariables(RPCTargetIP, RPCTargetPort);
+    }
+
+    public RPCaller getRPCaller(){
+        return o_RPCaller;
+    }
 }

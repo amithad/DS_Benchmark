@@ -39,8 +39,8 @@ public class FTMsgDecoder {
 
                     case 2: {
                         Neighbour n1 = new Neighbour(st.nextToken(), Integer.parseInt(st.nextToken())); //add neighbours
-                        Neighbour n2 = new Neighbour(st.nextToken(), Integer.parseInt(st.nextToken()));
                         ftMan.addNeighbour(n1);
+                        Neighbour n2 = new Neighbour(st.nextToken(), Integer.parseInt(st.nextToken()));
                         ftMan.addNeighbour(n2);
                         ftMan.echo("Registration successful. Two neighbours added.");
                         break;
@@ -116,7 +116,6 @@ public class FTMsgDecoder {
             }
             default: {
                 ftMan.readDSMsg(msg,senderIP);
-                ftMan.echo("Unsupported message format.");
                 break;
             }
         }

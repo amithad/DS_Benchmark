@@ -12,5 +12,7 @@ public enum BSMsgType {
     JOIN,
     JOINOK,
     LEAVE,
-    LEAVEOK
+    LEAVEOK,
+    RPCREQ,
+    RPCOK
 }

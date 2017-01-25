@@ -12,8 +12,8 @@ public class PCHandler {
         return x * y;
     }
 
-    public float sqrt(int x) {
-        return (float) Math.sqrt(x);
+    public int sqrt(int x) {
+        return (int) Math.sqrt(x);
     }
 
     public String allCaps(String s) {
