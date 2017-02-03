@@ -1,6 +1,7 @@
 package CMS.FT;
 
 import CMS.Node;
+import CMS.Util.Configurations;
 import CMS.Util.Neighbour;
 import CMS.Util.PCHandler;
 
@@ -191,7 +192,7 @@ public class FTMan {
 
     private InetAddress discoverMyIP() throws UnknownHostException {
         //replace with IP discovery code
-        InetAddress myIP = InetAddress.getByName("127.0.0.1");
+        InetAddress myIP = InetAddress.getByName(Configurations.NODEIP);
         return myIP;
     }
 
@@ -208,7 +209,7 @@ public class FTMan {
     public void echo(String msg) {
         String prefix = new Date().toString() + ": ";
         prefix += this.getNodeID() + ": ";
-        //System.out.println(prefix + msg);
+        System.out.println(prefix + msg);
     }
 
     public void screen(String msg) {

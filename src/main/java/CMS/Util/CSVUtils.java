@@ -15,7 +15,23 @@ import java.util.List;
 public class CSVUtils {
     private static final char DEFAULT_SEPARATOR = ',';
     private static String CSVFile = "" + Paths.get("SearchResults.csv").toAbsolutePath();
+    private static String CSVFile_node = "" + Paths.get("NodeResults.csv").toAbsolutePath();
 
+    public static class NodeResults {
+
+        int sentMessages=0;
+        int forwardedMessages=0;
+        int answeredMessages=0;
+        int nodeDegree=0;
+
+
+         public NodeResults(int sentMessages,int forwardedMessages,int answeredMessages,int nodeDegree){
+            this.sentMessages=sentMessages;
+            this.forwardedMessages=forwardedMessages;
+            this.answeredMessages=answeredMessages;
+            this.nodeDegree=nodeDegree;
+        }
+    }
 
     public static class SearchNodeResults {
         String fileName;
@@ -29,10 +45,48 @@ public class CSVUtils {
         }
     }
 
+    public static void writeNodeHeaderCSV(){
+        try {
+            FileWriter w = new FileWriter(CSVFile_node);
+            writeLine(w, Arrays.asList("Time_Stamp"+"Sent","Forward","Answered",""));
+            w.flush();
+            w.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void writeResults(NodeResults nodeResults){
+        try {
+            FileWriter w = new FileWriter(CSVFile_node, true);
+            String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+            writeLine(w, Arrays.asList(timeStamp,""+nodeResults.sentMessages,nodeResults.forwardedMessages+"",""+nodeResults.answeredMessages,""+nodeResults.nodeDegree));
+            w.flush();
+            w.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void writeBreakCSV(){
+        try {
+            FileWriter w = new FileWriter(CSVFile, true);
+            writeLine(w, Arrays.asList("-","-","-","-"));
+            w.flush();
+            w.close();
+            w = new FileWriter(CSVFile_node, true);
+            writeLine(w, Arrays.asList("-","-","-","-"));
+            w.flush();
+            w.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void writeSearchHeader() {
         try {
             FileWriter w = new FileWriter(CSVFile);
-            System.out.println("Path : " + CSVFile);
             writeLine(w, Arrays.asList("Time_Stamp", "FileName", "Latency", "HopCount"));
             w.flush();
             w.close();

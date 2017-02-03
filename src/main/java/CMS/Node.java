@@ -5,15 +5,21 @@ package CMS; /**
 import CMS.FT.FTMan;
 import CMS.Util.CLI;
 import CMS.Util.CSVUtils;
+import CMS.Util.Configurations;
 import CMS.Util.RPCServer;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.rmi.NotBoundException;
 import java.util.Vector;
 
+import static java.lang.System.currentTimeMillis;
+
 public class Node extends FTMan {
 
-    public static final int hopCount = 5;
+    public static final int waitTimeout = Configurations.TTL;
+    public static final int hopCount = Configurations.MAXHOPS;
     public static final String sID = "SIdentifier";
 
     private Vector<String> myFiles = new Vector<>();
@@ -64,11 +70,11 @@ public class Node extends FTMan {
         BufferedReader br = new BufferedReader(fr);
 
         String filename;
-        while((filename=br.readLine())!=null){
+        while ((filename = br.readLine()) != null) {
             addFile(filename);
         }
     }
-    
+
     public void initializeRPC(int RPCServerPort) {
         this.RPCServerPort = RPCServerPort;
         o_RPCServer = new RPCServer(this.RPCServerPort, this);
@@ -77,7 +83,7 @@ public class Node extends FTMan {
 
     @Override
     public String findFile(String fileName) {
-
+        fileName = fileName.replace('@', ' ');
         String result = "";
 
         fileName = fileName.trim();
@@ -105,24 +111,34 @@ public class Node extends FTMan {
     }
 
     public void searchFile(String fileName) throws IOException, InterruptedException, NotBoundException {
-        requestFile();
-        String SerMsg = "SER";
-        SerMsg += " " + getIPAddress() + " " + getRPCServerPort() + " " + fileName + " " + hopCount;
-        startTime = System.currentTimeMillis();
-        floodNeighbours(SerMsg);
-        while (fileRequested) {
-        } //block the next call
+        startTime = currentTimeMillis();
+        String localResponse = findFile(fileName);
+        if (!localResponse.equalsIgnoreCase("")) {
+            requestFile();
+            retrieveResult(localResponse, getIPAddress(), getRPCServerPort(), 0);
+        } else {
+            requestFile();
+            String SerMsg = "SER";
+            SerMsg += " " + getIPAddress() + " " + getRPCServerPort() + " " + fileName.replace(' ', '@') + " " + hopCount;
+            floodNeighbours(SerMsg);
+            while (fileRequested) {
+                if (currentTimeMillis() - startTime > waitTimeout) {
+                    fileRequested = false;
+                    break;
+                }
+            } //block the next call
+        }
     }
 
     @Override
     public void retrieveResult(String fileName, String fileTarget, int targetPort, int hops) {
         if (fileRequested) {
             fileRequested = false;
-            long diffTime = System.currentTimeMillis() - startTime;
+            long diffTime = currentTimeMillis() - startTime;
             dropRequest();
             screen("========================================================");
             screen("Requested file(s) are available in the system.");
-            screen("File name - " + fileName.replace('@',' '));
+            screen("File name - " + fileName.replace('@', ' '));
             screen("File target - " + fileTarget + ":" + targetPort);
             screen("Latency (ms) - " + diffTime);
             screen("Hops to reach the target - " + hops);

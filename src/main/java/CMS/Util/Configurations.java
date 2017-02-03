@@ -25,6 +25,7 @@ public class Configurations {
     public static String FILEREPO;
     public static int MAXHOPS;
     public static int TTL;
+    public static String QUERIES;
 
     static {
 
@@ -43,7 +44,7 @@ public class Configurations {
                 FILEREPO = properties.getProperty("FILEREPO");
                 MAXHOPS = Integer.parseInt(properties.getProperty("MAXHOPS"));
                 TTL = Integer.parseInt(properties.getProperty("TTL"));
-
+                QUERIES = properties.getProperty("QUERIES");
             }
         } catch (URISyntaxException e) {
             e.printStackTrace();
