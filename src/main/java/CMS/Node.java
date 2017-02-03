@@ -4,12 +4,11 @@ package CMS; /**
 
 import CMS.FT.FTMan;
 import CMS.Util.CLI;
+import CMS.Util.CSVUtils;
 import CMS.Util.RPCServer;
 
 import java.io.IOException;
 import java.rmi.NotBoundException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Vector;
 
 public class Node extends FTMan {
@@ -17,13 +16,13 @@ public class Node extends FTMan {
     public static final int hopCount = 5;
     public static final String sID = "SIdentifier";
 
-    private Vector myFiles = new Vector<>();
+    private Vector<String> myFiles = new Vector<>();
     private RPCServer o_RPCServer;
     private boolean RPCInitialized = false;
     private CLI userInterface;
 
-    private Map<String, Boolean> responses = new HashMap<>();
-    private Map<String, Long> startTime = new HashMap<>();
+    private boolean fileRequested = false;
+    private long startTime = 0;
 
     public Node(String BSIP, int BSPort) throws IOException {
         super(BSIP, BSPort);
@@ -67,40 +66,70 @@ public class Node extends FTMan {
     }
 
     @Override
-    public boolean fileIsAvailable(String fileName) {
+    public String findFile(String fileName) {
+
+        String result = "";
+
+        fileName = fileName.trim();
         for (int i = 0; i < myFiles.size(); i++) {
-            if (fileName.equals(myFiles.get(i))) {
-                return true;
+            //screen(myFiles.get(i));
+            if (fileName.equalsIgnoreCase(myFiles.get(i))) {
+                result = myFiles.get(i).replace(' ', '@');
+                return result;
+            } else {
+                for (String partialWord : myFiles.get(i).split(" ")) {
+                    if (partialWord.equalsIgnoreCase(fileName)) {
+                        if (result.equalsIgnoreCase("")) {
+
+                            result = result + myFiles.get(i).replace(' ', '@');
+                        } else {
+
+                            result = result + "," + myFiles.get(i).replace(' ', '@');
+                        }
+                    }
+                }
             }
         }
-        return false;
+        //screen(result);
+        return result;
     }
 
     public void searchFile(String fileName) throws IOException, InterruptedException, NotBoundException {
-        responses.put(fileName, true);
+        requestFile();
         String SerMsg = "SER";
         SerMsg += " " + getIPAddress() + " " + getRPCServerPort() + " " + fileName + " " + hopCount;
-        startTime.put(fileName, System.currentTimeMillis());
+        startTime = System.currentTimeMillis();
         floodNeighbours(SerMsg);
-        while (responses.get(fileName)) {} //block the next call
+        while (fileRequested) {
+        } //block the next call
     }
 
     @Override
     public void retrieveResult(String fileName, String fileTarget, int targetPort, int hops) {
-        if (responses.get(fileName)) {
-            long diffTime = System.currentTimeMillis() - startTime.get(fileName);
-            responses.put(fileName, false);
+        if (fileRequested) {
+            fileRequested = false;
+            long diffTime = System.currentTimeMillis() - startTime;
+            dropRequest();
             screen("========================================================");
             screen("Requested file(s) are available in the system.");
-            screen("File name - " + fileName);
+            screen("File name - " + fileName.replace('@',' '));
             screen("File target - " + fileTarget + ":" + targetPort);
             screen("Latency (ms) - " + diffTime);
             screen("Hops to reach the target - " + hops);
             screen("========================================================");
+            CSVUtils.writeSearchResults(new CSVUtils.SearchNodeResults(fileName, diffTime, hops));
         }
     }
 
     public int getRPCServerPort() {
         return RPCServerPort;
+    }
+
+    public void requestFile() {
+        fileRequested = true;
+    }
+
+    public void dropRequest() {
+        fileRequested = false;
     }
 }

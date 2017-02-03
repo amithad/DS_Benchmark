@@ -12,32 +12,28 @@ import java.util.List;
 /**
  * Created by ruchi on 2/3/17.
  */
-public class CSVutils {
+public class CSVUtils {
     private static final char DEFAULT_SEPARATOR = ',';
-    private static String CSVFile= ""+Paths.get("SearchResults.csv").toAbsolutePath();
+    private static String CSVFile = "" + Paths.get("SearchResults.csv").toAbsolutePath();
 
-    public static void main(String args[]){
-        CSVutils.writeSearchHeader();
-        CSVutils.writeSearchResults(new SearchNodeResults("A",(long)100,10));
-    }
 
-    static class SearchNodeResults {
+    public static class SearchNodeResults {
         String fileName;
         long latency;
         int hopCount;
 
-        SearchNodeResults(String fileName, Long latency, int hopCount){
-            this.fileName=fileName;
-            this.latency=latency;
-            this.hopCount=hopCount;
+        public SearchNodeResults(String fileName, Long latency, int hopCount) {
+            this.fileName = fileName;
+            this.latency = latency;
+            this.hopCount = hopCount;
         }
     }
 
-    public static void writeSearchHeader(){
+    public static void writeSearchHeader() {
         try {
-            FileWriter w=new FileWriter(CSVFile);
-            System.out.println("Path : "+CSVFile);
-            writeLine(w, Arrays.asList("Time_Stamp","FileName","Latency","HopCount"));
+            FileWriter w = new FileWriter(CSVFile);
+            System.out.println("Path : " + CSVFile);
+            writeLine(w, Arrays.asList("Time_Stamp", "FileName", "Latency", "HopCount"));
             w.flush();
             w.close();
         } catch (IOException e) {
@@ -45,11 +41,11 @@ public class CSVutils {
         }
     }
 
-    public static void writeSearchResults(SearchNodeResults nodeResults){
+    public static void writeSearchResults(SearchNodeResults nodeResults) {
         try {
-            FileWriter w=new FileWriter(CSVFile,true);
+            FileWriter w = new FileWriter(CSVFile, true);
             String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
-            writeLine(w, Arrays.asList(timeStamp,""+nodeResults.fileName,nodeResults.latency+"",""+nodeResults.hopCount));
+            writeLine(w, Arrays.asList(timeStamp, "" + nodeResults.fileName, nodeResults.latency + "", "" + nodeResults.hopCount));
             w.flush();
             w.close();
         } catch (IOException e) {
@@ -78,7 +74,7 @@ public class CSVutils {
 
     }
 
-    private  static void writeLine(Writer w, List<String> values, char separators, char customQuote) throws IOException {
+    private static void writeLine(Writer w, List<String> values, char separators, char customQuote) throws IOException {
 
         boolean first = true;
 

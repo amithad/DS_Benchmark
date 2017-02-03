@@ -18,8 +18,9 @@ public class Daemon {
         fileMap.put(0, "Cinderella");
         fileMap.put(1, "Thumbelina ");
         fileMap.put(2, "Aurora");
-        fileMap.put(3, "Belle");
-        fileMap.put(4, "Tiana");
+        fileMap.put(3, "Windows 8");
+        fileMap.put(4, "Windows XP");
+
 
         TestNode n0 = new TestNode("N0", 10000, "user0");
         TestNode n1 = new TestNode("N1", 10001, "user1");

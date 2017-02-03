@@ -229,8 +229,8 @@ public class FTMan {
         return myIP.getHostAddress();
     }
 
-    public boolean fileIsAvailable(String fileName) {
-        return false;
+    public String findFile(String fileName) {
+        return null;
     }
 
     public void retrieveResult(String fileName, String fileTarget, int targetPort, int hops) {

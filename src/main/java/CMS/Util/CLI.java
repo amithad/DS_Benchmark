@@ -13,23 +13,28 @@ public class CLI extends Thread {
 
     Node node;
 
-    public CLI(Node node){
+    public CLI(Node node) {
         this.node = node;
     }
 
     @Override
-    public void run(){
+    public void run() {
         boolean CLIRunning = true;
-        while (CLIRunning){
+        CSVUtils.writeSearchHeader(); //create file and write header
+        while (CLIRunning) {
             node.screen(null);
             node.screen("Enter a file name to search:");
 
             Scanner scanner = new Scanner(System.in);
             String fileName = scanner.nextLine();
 
-            if(fileName.equals("exit 0")){
+            if (fileName.equals("exit 0")) {
                 printNodeStats();
                 System.exit(0);
+            }
+            if (fileName.equals("exit 1")){
+                printNodeStats();
+                resetStats();
             }
 
             try {
@@ -40,13 +45,19 @@ public class CLI extends Thread {
         }
     }
 
-    public void printNodeStats(){
+    public void printNodeStats() {
         node.screen("========================================================");
-        node.screen("Node degree: "+ node.getNeighbourCount());
-        node.screen("Total query msgs received: "+ node.queriesReceived);
-        node.screen("Total query msgs forwarded: "+ node.queriesForwarded);
-        node.screen("Total query msgs answered: "+ node.queriesAnswered);
+        node.screen("Node degree: " + node.getNeighbourCount());
+        node.screen("Total query msgs received: " + node.queriesReceived);
+        node.screen("Total query msgs forwarded: " + node.queriesForwarded);
+        node.screen("Total query msgs answered: " + node.queriesAnswered);
         node.screen("========================================================");
+    }
+
+    public void resetStats() {
+        node.queriesReceived = 0;
+        node.queriesForwarded = 0;
+        node.queriesAnswered = 0;
     }
 
 }

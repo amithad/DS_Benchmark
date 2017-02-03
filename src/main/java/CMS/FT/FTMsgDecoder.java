@@ -123,10 +123,11 @@ public class FTMsgDecoder {
                 int sendPort = Integer.parseInt(st.nextToken());
                 String fileName = st.nextToken();
                 int hopCount = Integer.parseInt(st.nextToken());
-                if (ftMan.fileIsAvailable(fileName)) {
+                String result = ftMan.findFile(fileName);
+                if (!result.equals("")) {
                     ftMan.queriesAnswered++;
                     ftMan.echo(fileName + " found. Acknowledging request..");
-                    ftMan.sendSEROK(1, sendIP, sendPort, 5 - hopCount + 1, fileName);
+                    ftMan.sendSEROK(1, sendIP, sendPort, 5 - hopCount + 1, result);
                 } else if(hopCount != 0){
                     ftMan.queriesForwarded++;
                     hopCount--;
