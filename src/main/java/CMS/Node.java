@@ -61,6 +61,16 @@ public class Node extends FTMan {
         myFiles.addElement(fileName);
     }
 
+    public void addFiles(String fileRepo) throws IOException {
+        FileReader fr = new FileReader(fileRepo);
+        BufferedReader br = new BufferedReader(fr);
+
+        String filename;
+        while((filename=br.readLine())!=null){
+            addFile(filename);
+        }
+    }
+    
     public void initializeRPC(int RPCServerPort) {
         this.RPCServerPort = RPCServerPort;
         o_RPCServer = new RPCServer(this.RPCServerPort, this);
