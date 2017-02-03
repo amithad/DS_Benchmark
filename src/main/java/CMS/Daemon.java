@@ -1,7 +1,5 @@
 package CMS;
 
-import org.apache.xmlrpc.XmlRpcException;
-
 import java.io.IOException;
 import java.rmi.NotBoundException;
 import java.util.HashMap;
@@ -45,7 +43,7 @@ public class Daemon {
             myNode.initialize(nodeID, myUsername);
             myNode.initializeRPC(RPCServerPort);
 
-            ///add RPC functionality
+            ///add files
             int tempID = RPCServerPort - 10000;
             for (int i = 0; i <= tempID; i++) {
                 myNode.addFile(fileMap.get(i));
@@ -62,7 +60,7 @@ public class Daemon {
                     myNode.startUI();
                 }
 
-            } catch (IOException | InterruptedException | NotBoundException | XmlRpcException e) {
+            } catch (IOException | InterruptedException | NotBoundException e) {
                 e.printStackTrace();
             }
         }

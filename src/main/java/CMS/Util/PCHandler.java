@@ -1,7 +1,5 @@
 package CMS.Util;
 
-import org.apache.xmlrpc.XmlRpcException;
-
 import java.io.IOException;
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
@@ -11,7 +9,7 @@ import java.rmi.Remote;
  */
 public interface PCHandler extends Remote {
 
-    String DSCommMsg(String msg, String senderIP) throws InterruptedException, XmlRpcException, IOException, NotBoundException;
+    String DSCommMsg(String msg, String senderIP) throws InterruptedException, IOException, NotBoundException;
 }
 
 

@@ -3,7 +3,6 @@ package CMS.FT;
 import CMS.Node;
 import CMS.Util.Neighbour;
 import CMS.Util.PCHandler;
-import org.apache.xmlrpc.XmlRpcException;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -29,6 +28,14 @@ public class FTMan {
     private String BSIP;
     private int BSPort;
 
+    //=========================Measurements=====================
+
+    public int queriesReceived = 0;
+    public int queriesForwarded = 0;
+    public int queriesAnswered = 0;
+
+    //==========================================================
+
     private UDPClient o_UDPClient;
     protected List<Neighbour> neighbourList; //can be modified by Node class.
 
@@ -41,7 +48,7 @@ public class FTMan {
         neighbourList = new ArrayList<>();
     }
 
-    protected void startFT() throws IOException, InterruptedException, XmlRpcException, NotBoundException {
+    protected void startFT() throws IOException, InterruptedException, NotBoundException {
         if (initialized) {
             echo("Connecting to BootstrapServer at " + BSIP + ":" + BSPort + "...");
             sendREG();
@@ -60,7 +67,7 @@ public class FTMan {
         initialized = true;
     }
 
-    public String sendREG() throws IOException, InterruptedException, XmlRpcException, NotBoundException {
+    public String sendREG() throws IOException, InterruptedException, NotBoundException {
         //handle registration loop. keep registration attempt count.
         if (false) this.wait(2000); //wait accordingly
 
@@ -71,7 +78,7 @@ public class FTMan {
         return response;
     }
 
-    public String sendUNREG() throws IOException, InterruptedException, XmlRpcException, NotBoundException {
+    public String sendUNREG() throws IOException, InterruptedException, NotBoundException {
         //handle unreg loop. Keep unreg attempt count
         String unregMsg = "UNREG";
         unregMsg += " " + myIP.getHostAddress() + " " + RPCServerPort + " " + myUsername;
@@ -80,36 +87,36 @@ public class FTMan {
         return response;
     }
 
-    public String leaveDS() throws InterruptedException, NotBoundException, XmlRpcException, IOException {
+    public String leaveDS() throws InterruptedException, NotBoundException, IOException {
         String response = sendUNREG();
         Iterator<Neighbour> i = neighbourList.iterator();
         while (i.hasNext()) {
             Neighbour temp = i.next();
-            sendRPCLEAVE(temp.getNeighbourIP(),temp.getNeighbourPort());
+            sendRPCLEAVE(temp.getNeighbourIP(), temp.getNeighbourPort());
         }
         return response;
     }
 
-    public String sendRPCLEAVE(String sendIP, int sendPort) throws InterruptedException, NotBoundException, XmlRpcException, IOException {
-        String leaveMsg  = "LEAVE";
+    public String sendRPCLEAVE(String sendIP, int sendPort) throws InterruptedException, NotBoundException, IOException {
+        String leaveMsg = "LEAVE";
         leaveMsg += " " + getIPAddress() + " " + RPCServerPort;
-        String response = sendDSRPCComm(leaveMsg,sendIP,sendPort);
+        String response = sendDSRPCComm(leaveMsg, sendIP, sendPort);
         return response;
     }
 
-    public void sendRPCJOIN(String IP, String sendIP, int sendPort) throws IOException, XmlRpcException, NotBoundException, InterruptedException {
+    public void sendRPCJOIN(String IP, String sendIP, int sendPort) throws IOException, NotBoundException, InterruptedException {
         String joinMsg = "JOIN";
         joinMsg += " " + myIP.getHostAddress() + " " + RPCServerPort;
         sendDSRPCComm(joinMsg, sendIP, sendPort);
     }
 
-    public void sendRPCJOINOK(String sendIP, int sendPort, int responseFlag) throws IOException, InterruptedException, XmlRpcException, NotBoundException {
+    public void sendRPCJOINOK(String sendIP, int sendPort, int responseFlag) throws IOException, InterruptedException, NotBoundException {
         String joinOkMsg = "JOINOK";
         joinOkMsg += " " + responseFlag;
         sendDSRPCComm(joinOkMsg, sendIP, sendPort);
     }
 
-    public void sendSEROK(int noOfFiles, String sendIP, int sendPort, int hops, String fileNames) throws InterruptedException, NotBoundException, XmlRpcException, IOException {
+    public void sendSEROK(int noOfFiles, String sendIP, int sendPort, int hops, String fileNames) throws InterruptedException, NotBoundException, IOException {
         String serOkMsg = "SEROK";
         serOkMsg += " " + noOfFiles;
         serOkMsg += " " + getIPAddress() + " " + RPCServerPort;
@@ -121,7 +128,7 @@ public class FTMan {
         return o_UDPClient.sendBSMsg(this.nodeID, message, expectResponse);
     }
 
-    public String sendDSRPCComm(String msg, String sendIP, int sendPort) throws IOException, NotBoundException, InterruptedException, XmlRpcException {
+    public String sendDSRPCComm(String msg, String sendIP, int sendPort) throws IOException, NotBoundException, InterruptedException {
         Registry r1 = LocateRegistry.getRegistry(sendIP, sendPort);
         PCHandler stub = (PCHandler) r1.lookup(Node.sID);
         msg = String.format("%04d", msg.length() + 5) + " " + msg;
@@ -129,7 +136,7 @@ public class FTMan {
         return response;
     }
 
-    public boolean addNeighbour(Neighbour nbr) throws IOException, XmlRpcException, NotBoundException, InterruptedException {
+    public boolean addNeighbour(Neighbour nbr) throws IOException, NotBoundException, InterruptedException {
         if (nbr != null) {
             boolean neighbourExists = false;
             Iterator<Neighbour> i = neighbourList.iterator();
@@ -174,7 +181,7 @@ public class FTMan {
         return 0;
     }
 
-    public void floodNeighbours(String msg) throws IOException, InterruptedException, XmlRpcException, NotBoundException {
+    public void floodNeighbours(String msg) throws IOException, InterruptedException, NotBoundException {
         Iterator<Neighbour> i = neighbourList.iterator();
         while (i.hasNext()) {
             Neighbour n = i.next();
@@ -188,7 +195,7 @@ public class FTMan {
         return myIP;
     }
 
-    public void disconnectBS() throws IOException, InterruptedException, XmlRpcException, NotBoundException {
+    public void disconnectBS() throws IOException, InterruptedException, NotBoundException {
         echo("Disconnecting...");
         sendUNREG();
         o_UDPClient.disconnectBS();
@@ -204,10 +211,18 @@ public class FTMan {
         //System.out.println(prefix + msg);
     }
 
-    public void screen(String msg){
-        String prefix = new Date().toString() + ": ";
-        prefix += this.getNodeID() + ": ";
-        System.out.println(prefix + msg);
+    public void screen(String msg) {
+        if (msg == null) {
+            System.out.println();
+        } else {
+            String prefix = new Date().toString() + ": ";
+            prefix += this.getNodeID() + ": ";
+            System.out.println(prefix + msg);
+        }
+    }
+
+    public int getNeighbourCount(){
+        return neighbourList.size();
     }
 
     public String getIPAddress() {
@@ -218,7 +233,7 @@ public class FTMan {
         return false;
     }
 
-    public void displayResult(String fileName, String fileTarget, int targetPort, int hops){
+    public void retrieveResult(String fileName, String fileTarget, int targetPort, int hops) {
 
     }
 

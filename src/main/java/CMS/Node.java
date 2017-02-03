@@ -5,7 +5,6 @@ package CMS; /**
 import CMS.FT.FTMan;
 import CMS.Util.CLI;
 import CMS.Util.RPCServer;
-import org.apache.xmlrpc.XmlRpcException;
 
 import java.io.IOException;
 import java.rmi.NotBoundException;
@@ -30,12 +29,12 @@ public class Node extends FTMan {
         super(BSIP, BSPort);
     }
 
-    public void startUI(){
+    public void startUI() {
         userInterface = new CLI(this);
         userInterface.start();
     }
 
-    public void start() throws IOException, InterruptedException, XmlRpcException, NotBoundException {
+    public void start() throws IOException, InterruptedException, NotBoundException {
         startRPC();
         Thread.sleep(2000);
         startFT();
@@ -77,20 +76,20 @@ public class Node extends FTMan {
         return false;
     }
 
-    public void searchFile(String fileName) throws IOException, InterruptedException, XmlRpcException, NotBoundException {
-
-        responses.put(fileName,true);
+    public void searchFile(String fileName) throws IOException, InterruptedException, NotBoundException {
+        responses.put(fileName, true);
         String SerMsg = "SER";
         SerMsg += " " + getIPAddress() + " " + getRPCServerPort() + " " + fileName + " " + hopCount;
-        startTime.put(fileName,System.currentTimeMillis());
+        startTime.put(fileName, System.currentTimeMillis());
         floodNeighbours(SerMsg);
+        while (responses.get(fileName)) {} //block the next call
     }
 
     @Override
-    public void displayResult(String fileName, String fileTarget, int targetPort, int hops) {
-        if(responses.get(fileName)){
+    public void retrieveResult(String fileName, String fileTarget, int targetPort, int hops) {
+        if (responses.get(fileName)) {
             long diffTime = System.currentTimeMillis() - startTime.get(fileName);
-            responses.put(fileName,false);
+            responses.put(fileName, false);
             screen("========================================================");
             screen("Requested file(s) are available in the system.");
             screen("File name - " + fileName);
