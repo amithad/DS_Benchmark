@@ -248,8 +248,8 @@ public class FTMan {
     }
 
     public PrintWriter createLogger() throws FileNotFoundException, UnsupportedEncodingException {
-        String suffix = new Date().toString();
-        loggerFile = new PrintWriter(loggerName +"_"+ suffix+".txt", "UTF-8");
+        //String suffix = new Date().toString();
+        //oggerFile = new PrintWriter(loggerName +"_"+ suffix+".txt", "UTF-8");
         return loggerFile;
     }
 
