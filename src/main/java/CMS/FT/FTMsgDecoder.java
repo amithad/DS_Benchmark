@@ -1,7 +1,6 @@
 package CMS.FT;
 
 import CMS.Util.Neighbour;
-import org.apache.xmlrpc.XmlRpcException;
 
 import java.io.IOException;
 import java.rmi.NotBoundException;
@@ -12,7 +11,7 @@ import java.util.StringTokenizer;
  */
 public class FTMsgDecoder {
 
-    public static String decodeFTMsg(FTMan ftMan, String msg, String senderIP) throws IOException, InterruptedException, XmlRpcException, NotBoundException {
+    public static String decodeFTMsg(FTMan ftMan, String msg, String senderIP) throws IOException, InterruptedException, NotBoundException {
         StringTokenizer st = new StringTokenizer(msg, " ");
         String length = st.nextToken();
         String responseType = st.nextToken();
@@ -118,15 +117,19 @@ public class FTMsgDecoder {
             }
 
             case SER: {
+                ftMan.queriesReceived++;
                 ftMan.echo("File request from " + senderIP);
                 String sendIP = st.nextToken();
                 int sendPort = Integer.parseInt(st.nextToken());
                 String fileName = st.nextToken();
                 int hopCount = Integer.parseInt(st.nextToken());
-                if (ftMan.fileIsAvailable(fileName)) {
+                String result = ftMan.findFile(fileName);
+                if (!result.equals("")) {
+                    ftMan.queriesAnswered++;
                     ftMan.echo(fileName + " found. Acknowledging request..");
-                    ftMan.sendSEROK(1, sendIP, sendPort, 5 - hopCount + 1, fileName);
+                    ftMan.sendSEROK(1, sendIP, sendPort, 5 - hopCount + 1, result);
                 } else if(hopCount != 0){
+                    ftMan.queriesForwarded++;
                     hopCount--;
                     String msgToFlood = "SER " + sendIP + " " + sendPort + " " + fileName + " " + hopCount;
                     ftMan.floodNeighbours(msgToFlood);
@@ -141,7 +144,7 @@ public class FTMsgDecoder {
                 int targetPort = Integer.parseInt(st.nextToken());
                 int hops = Integer.parseInt(st.nextToken());
                 String fileName = st.nextToken();
-                ftMan.displayResult(fileName,fileTarget,targetPort,hops);
+                ftMan.retrieveResult(fileName,fileTarget,targetPort,hops);
             }
             default: {
                 break;

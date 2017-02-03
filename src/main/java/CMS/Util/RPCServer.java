@@ -2,7 +2,6 @@ package CMS.Util;
 
 import CMS.FT.FTMsgDecoder;
 import CMS.Node;
-import org.apache.xmlrpc.XmlRpcException;
 
 import java.io.IOException;
 import java.rmi.NotBoundException;
@@ -26,7 +25,7 @@ public class RPCServer extends Thread implements PCHandler {
     }
 
     @Override
-    public String DSCommMsg(String msg, String senderIP) throws InterruptedException, XmlRpcException, IOException, NotBoundException {
+    public String DSCommMsg(String msg, String senderIP) throws InterruptedException, IOException, NotBoundException {
         //do the decoding here
         node.echo(msg);
         String result = FTMsgDecoder.decodeFTMsg(node, msg, senderIP);
