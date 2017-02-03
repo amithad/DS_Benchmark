@@ -5,10 +5,8 @@ import CMS.Util.Configurations;
 import CMS.Util.Neighbour;
 import CMS.Util.PCHandler;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.rmi.NotBoundException;
@@ -18,7 +16,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.FutureTask;
 
 /**
  * Created by amitha on 1/8/17.
@@ -32,9 +29,6 @@ public class FTMan {
     private String myUsername;
     private String BSIP;
     private int BSPort;
-
-    private PrintWriter loggerFile;
-    public static final String loggerName = "FTManLog";
 
     //=========================Measurements=====================
 
@@ -245,18 +239,5 @@ public class FTMan {
 
     public void retrieveResult(String fileName, String fileTarget, int targetPort, int hops) {
 
-    }
-
-    public PrintWriter createLogger() throws FileNotFoundException, UnsupportedEncodingException {
-        String suffix = new Date().toString();
-        loggerFile = new PrintWriter(loggerName +"_"+ suffix+".txt", "UTF-8");
-        return loggerFile;
-    }
-
-    public PrintWriter getLogger() throws FileNotFoundException, UnsupportedEncodingException {
-        if(loggerFile == null){
-            return createLogger();
-        }
-        return loggerFile;
     }
 }

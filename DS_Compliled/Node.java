@@ -1,9 +1,7 @@
-//package CMS; 
-/**
- * Created by amitha on 1/8/17.
- */
+/*package CMS; 
 
-/*import CMS.FT.FTMan;
+
+import CMS.FT.FTMan;
 import CMS.Util.CLI;
 import CMS.Util.CSVUtils;
 import CMS.Util.Configurations;
@@ -42,7 +40,6 @@ public class Node extends FTMan {
 
     public void start() throws IOException, InterruptedException, NotBoundException {
         startRPC();
-        createLogger();
         Thread.sleep(2000);
         startFT();
         if (!myFiles.isEmpty()) {

@@ -41,7 +41,6 @@ public class Node extends FTMan {
 
     public void start() throws IOException, InterruptedException, NotBoundException {
         startRPC();
-        createLogger();
         Thread.sleep(2000);
         startFT();
         if (!myFiles.isEmpty()) {
