@@ -57,7 +57,7 @@ public class Daemon {
             try {
                 myNode.start();
                 Thread.sleep(2000);
-                if(myNode.getNodeID().equals("N1")){
+                if (myNode.getNodeID().equals("N1")) {
                     //myNode.searchFile("Tiana");
                     myNode.startUI();
                 }

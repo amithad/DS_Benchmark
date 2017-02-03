@@ -201,7 +201,7 @@ public class FTMan {
     public void echo(String msg) {
         String prefix = new Date().toString() + ": ";
         prefix += this.getNodeID() + ": ";
-        System.out.println(prefix + msg);
+        //System.out.println(prefix + msg);
     }
 
     public void screen(String msg){

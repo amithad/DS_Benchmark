@@ -22,7 +22,9 @@ public class Node extends FTMan {
     private RPCServer o_RPCServer;
     private boolean RPCInitialized = false;
     private CLI userInterface;
+
     private Map<String, Boolean> responses = new HashMap<>();
+    private Map<String, Long> startTime = new HashMap<>();
 
     public Node(String BSIP, int BSPort) throws IOException {
         super(BSIP, BSPort);
@@ -76,20 +78,24 @@ public class Node extends FTMan {
     }
 
     public void searchFile(String fileName) throws IOException, InterruptedException, XmlRpcException, NotBoundException {
+
         responses.put(fileName,true);
         String SerMsg = "SER";
         SerMsg += " " + getIPAddress() + " " + getRPCServerPort() + " " + fileName + " " + hopCount;
+        startTime.put(fileName,System.currentTimeMillis());
         floodNeighbours(SerMsg);
     }
 
     @Override
     public void displayResult(String fileName, String fileTarget, int targetPort, int hops) {
         if(responses.get(fileName)){
+            long diffTime = System.currentTimeMillis() - startTime.get(fileName);
             responses.put(fileName,false);
             screen("========================================================");
             screen("Requested file(s) are available in the system.");
             screen("File name - " + fileName);
             screen("File target - " + fileTarget + ":" + targetPort);
+            screen("Latency (ms) - " + diffTime);
             screen("Hops to reach the target - " + hops);
             screen("========================================================");
         }
