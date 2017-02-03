@@ -217,13 +217,7 @@ public class FTMan {
         String prefix = new Date().toString() + ": ";
         prefix += this.getNodeID() + ": ";
         //System.out.println(prefix + msg);
-        try {
-            getLogger().append(prefix+msg+"\n");
-            getLogger().close();
 
-        } catch (FileNotFoundException | UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
 
     }
 
