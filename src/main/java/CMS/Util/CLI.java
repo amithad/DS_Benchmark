@@ -23,7 +23,7 @@ public class CLI extends Thread {
         boolean CLIRunning = true;
         while (CLIRunning){
             System.out.println();
-            System.out.println("File name to Search:");
+            System.out.println("Enter a file name to search:");
             Scanner scanner = new Scanner(System.in);
             String fileName = scanner.nextLine();
             try {

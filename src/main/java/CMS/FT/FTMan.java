@@ -80,6 +80,23 @@ public class FTMan {
         return response;
     }
 
+    public String leaveDS() throws InterruptedException, NotBoundException, XmlRpcException, IOException {
+        String response = sendUNREG();
+        Iterator<Neighbour> i = neighbourList.iterator();
+        while (i.hasNext()) {
+            Neighbour temp = i.next();
+            sendRPCLEAVE(temp.getNeighbourIP(),temp.getNeighbourPort());
+        }
+        return response;
+    }
+
+    public String sendRPCLEAVE(String sendIP, int sendPort) throws InterruptedException, NotBoundException, XmlRpcException, IOException {
+        String leaveMsg  = "LEAVE";
+        leaveMsg += " " + getIPAddress() + " " + RPCServerPort;
+        String response = sendDSRPCComm(leaveMsg,sendIP,sendPort);
+        return response;
+    }
+
     public void sendRPCJOIN(String IP, String sendIP, int sendPort) throws IOException, XmlRpcException, NotBoundException, InterruptedException {
         String joinMsg = "JOIN";
         joinMsg += " " + myIP.getHostAddress() + " " + RPCServerPort;
@@ -184,7 +201,7 @@ public class FTMan {
     public void echo(String msg) {
         String prefix = new Date().toString() + ": ";
         prefix += this.getNodeID() + ": ";
-        //System.out.println(prefix + msg);
+        System.out.println(prefix + msg);
     }
 
     public void screen(String msg){
