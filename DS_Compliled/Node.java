@@ -1,12 +1,13 @@
-package CMS; /**
+//package CMS; 
+/**
  * Created by amitha on 1/8/17.
  */
 
-import CMS.FT.FTMan;
+/*import CMS.FT.FTMan;
 import CMS.Util.CLI;
 import CMS.Util.CSVUtils;
 import CMS.Util.Configurations;
-import CMS.Util.RPCServer;
+import CMS.Util.RPCServer;*/
 
 import java.io.BufferedReader;
 import java.io.FileReader;

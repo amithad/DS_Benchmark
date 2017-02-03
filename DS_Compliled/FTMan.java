@@ -1,9 +1,9 @@
-package CMS.FT;
+/*package CMS.FT;
 
 import CMS.Node;
 import CMS.Util.Configurations;
 import CMS.Util.Neighbour;
-import CMS.Util.PCHandler;
+import CMS.Util.PCHandler;*/
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -216,7 +216,7 @@ public class FTMan {
     public void echo(String msg) {
         String prefix = new Date().toString() + ": ";
         prefix += this.getNodeID() + ": ";
-        System.out.println(prefix + msg);
+        //System.out.println(prefix + msg);
         try {
             getLogger().append(prefix+msg+"\n");
             getLogger().close();
