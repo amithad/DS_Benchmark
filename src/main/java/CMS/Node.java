@@ -3,40 +3,48 @@ package CMS; /**
  */
 
 import CMS.FT.FTMan;
+import CMS.Util.CLI;
 import CMS.Util.RPCServer;
-import CMS.Util.RPCServiceMsgDecoder;
+import org.apache.xmlrpc.XmlRpcException;
 
 import java.io.IOException;
+import java.rmi.NotBoundException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 public class Node extends FTMan {
 
     public static final int hopCount = 5;
+    public static final String sID = "SIdentifier";
 
-    private Vector myRPCs = new Vector<>();
+    private Vector myFiles = new Vector<>();
     private RPCServer o_RPCServer;
-    private RPCaller o_RPCaller;
-    private int RPCServerPort;
     private boolean RPCInitialized = false;
-    private boolean RPCServerReady = false;//accessed by RPCServer
+    private CLI userInterface;
+    private Map<String, Boolean> responses = new HashMap<>();
 
     public Node(String BSIP, int BSPort) throws IOException {
         super(BSIP, BSPort);
-        o_RPCaller = new RPCaller(this);
     }
 
-    public void start() throws IOException, InterruptedException {
+    public void startUI(){
+        userInterface = new CLI(this);
+        userInterface.start();
+    }
+
+    public void start() throws IOException, InterruptedException, XmlRpcException, NotBoundException {
+        startRPC();
+        Thread.sleep(2000);
         startFT();
-        startServer();
-        if (!myRPCs.isEmpty()) {
-            String out = "Supporting RPCs:";
-            for (int i = 0; i < myRPCs.size(); i++) {
-                out += " " + myRPCs.get(i);
+        if (!myFiles.isEmpty()) {
+            String out = "Available files:";
+            for (int i = 0; i < myFiles.size(); i++) {
+                out += " " + myFiles.get(i);
             }
             echo(out);
         }
         startHB();
-        startRPC();
     }
 
     public void startRPC() {
@@ -47,8 +55,8 @@ public class Node extends FTMan {
         }
     }
 
-    public void invokeRPC(String rpc) { //adds RPCs to the list.
-        myRPCs.addElement(rpc);
+    public void addFile(String fileName) { //adds RPCs to the list.
+        myFiles.addElement(fileName);
     }
 
     public void initializeRPC(int RPCServerPort) {
@@ -57,51 +65,37 @@ public class Node extends FTMan {
         RPCInitialized = true;
     }
 
-    public boolean RPCIsSupported(String rpc) {
-        for (int i = 0; i < myRPCs.size(); i++) {
-            if (rpc.equals(myRPCs.get(i))) {
+    @Override
+    public boolean fileIsAvailable(String fileName) {
+        for (int i = 0; i < myFiles.size(); i++) {
+            if (fileName.equals(myFiles.get(i))) {
                 return true;
             }
         }
         return false;
     }
 
-    public void sendRPCOK(String RPCall, String senderIP,int senderPort) throws IOException {
-        String RPCOkMsg = "RPCOK";
-        RPCOkMsg += " " + RPCall + " " + senderIP + " " + getRPCServerPort();
-        sendDSCommMsg(RPCOkMsg, senderIP, senderPort);
+    public void searchFile(String fileName) throws IOException, InterruptedException, XmlRpcException, NotBoundException {
+        responses.put(fileName,true);
+        String SerMsg = "SER";
+        SerMsg += " " + getIPAddress() + " " + getRPCServerPort() + " " + fileName + " " + hopCount;
+        floodNeighbours(SerMsg);
     }
 
     @Override
-    protected void readDSMsg(String msg, String senderIP) throws IOException {
-        RPCServiceMsgDecoder.DecodeRPCMsg(this, msg, senderIP);
+    public void displayResult(String fileName, String fileTarget, int targetPort, int hops) {
+        if(responses.get(fileName)){
+            responses.put(fileName,false);
+            screen("========================================================");
+            screen("Requested file(s) are available in the system.");
+            screen("File name - " + fileName);
+            screen("File target - " + fileTarget + ":" + targetPort);
+            screen("Hops to reach the target - " + hops);
+            screen("========================================================");
+        }
     }
 
-    public void RPCServerReady() {
-        RPCServerReady = true;
-    }
-
-    public boolean isRPCServerReady() {
-        return RPCServerReady;
-    }
-
-    public int getRPCServerPort(){
+    public int getRPCServerPort() {
         return RPCServerPort;
-    }
-
-    public boolean isWaitingToExecRPC(){
-        return o_RPCaller.isWaitingToExecRPC();
-    }
-
-    public void interruptWait(){
-        o_RPCaller.interruptWait();
-    }
-
-    public void setTargetVariables(String RPCTargetIP, int RPCTargetPort){
-        o_RPCaller.setTargetVariables(RPCTargetIP, RPCTargetPort);
-    }
-
-    public RPCaller getRPCaller(){
-        return o_RPCaller;
     }
 }

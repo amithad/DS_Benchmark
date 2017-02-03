@@ -1,8 +1,10 @@
 package CMS.FT;
 
 import CMS.Util.Neighbour;
+import org.apache.xmlrpc.XmlRpcException;
 
 import java.io.IOException;
+import java.rmi.NotBoundException;
 import java.util.StringTokenizer;
 
 /**
@@ -10,7 +12,7 @@ import java.util.StringTokenizer;
  */
 public class FTMsgDecoder {
 
-    public static String decodeFTMsg(FTMan ftMan, String msg, String senderIP) throws IOException, InterruptedException {
+    public static String decodeFTMsg(FTMan ftMan, String msg, String senderIP) throws IOException, InterruptedException, XmlRpcException, NotBoundException {
         StringTokenizer st = new StringTokenizer(msg, " ");
         String length = st.nextToken();
         String responseType = st.nextToken();
@@ -94,14 +96,14 @@ public class FTMsgDecoder {
                 ftMan.addNeighbour(n1);
                 int senderPort = ftMan.getNeighbourPort(senderIP);
                 if (senderPort != 0) {
-                    ftMan.sendJOINOK(senderIP, senderPort, 0);
+                    ftMan.sendRPCJOINOK(senderIP, senderPort, 0);
                 }
                 break;
             }
             case JOINOK: {
                 int responseFlag = Integer.parseInt(st.nextToken());
                 if (responseFlag == 0) {
-                    ftMan.echo("Join request to "+senderIP+" was successful.");
+                    ftMan.echo("Join request to " + senderIP + " was successful.");
                 } else if (responseFlag == 9999) {
                     ftMan.echo("Error while adding new node to routing table.");
                 } else {
@@ -114,8 +116,34 @@ public class FTMsgDecoder {
                 ftMan.removeNeighbour(st.nextToken());
                 break;
             }
+
+            case SER: {
+                ftMan.echo("File request from " + senderIP);
+                String sendIP = st.nextToken();
+                int sendPort = Integer.parseInt(st.nextToken());
+                String fileName = st.nextToken();
+                int hopCount = Integer.parseInt(st.nextToken());
+                if (ftMan.fileIsAvailable(fileName)) {
+                    ftMan.echo(fileName + " found. Acknowledging request..");
+                    ftMan.sendSEROK(1, sendIP, sendPort, 5 - hopCount + 1, fileName);
+                } else if(hopCount != 0){
+                    hopCount--;
+                    String msgToFlood = "SER " + sendIP + " " + sendPort + " " + fileName + " " + hopCount;
+                    ftMan.floodNeighbours(msgToFlood);
+                    ftMan.echo("Requested file is not available. Searching in neighbours..");
+                }
+                break;
+            }
+
+            case SEROK: {
+                int fileCount = Integer.parseInt(st.nextToken());
+                String fileTarget = st.nextToken();
+                int targetPort = Integer.parseInt(st.nextToken());
+                int hops = Integer.parseInt(st.nextToken());
+                String fileName = st.nextToken();
+                ftMan.displayResult(fileName,fileTarget,targetPort,hops);
+            }
             default: {
-                ftMan.readDSMsg(msg,senderIP);
                 break;
             }
         }

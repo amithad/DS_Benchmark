@@ -50,16 +50,6 @@ public class UDPClient {
         return null;
     }
 
-    public synchronized void sendDSCommMsg(String msg, String sendIP, int sendPort) throws IOException {
-        msg = String.format("%04d", msg.length() + 5) + " " + msg;
-        byte[] outData = msg.getBytes();
-        //send packets
-        DatagramPacket sendPacket = new DatagramPacket(outData, outData.length, InetAddress.getByName(sendIP), sendPort);
-        getSocket().send(sendPacket);
-    }
-
-
-
     private String receiveFTMsg(String NodeID) throws IOException { //receive packets
         byte[] inData = new byte[65536];
         DatagramPacket receivePacket = new DatagramPacket(inData, inData.length);
