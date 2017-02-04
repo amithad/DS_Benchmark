@@ -36,7 +36,7 @@ public class Node extends FTMan {
             echo(out);
         }
         startHB();
-        startRPC();
+        //startRPC();
     }
 
     public void startRPC() {
