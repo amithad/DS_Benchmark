@@ -26,7 +26,7 @@ public class CLI extends Thread {
         CSVUtils.writeNodeHeaderCSV();
         while (CLIRunning) {
             node.screen(null);
-            node.screen("Enter a file name to search:");
+            node.screen("Enter command/ query to search");
 
             Scanner scanner = new Scanner(System.in);
             String fileName = scanner.nextLine();
@@ -39,6 +39,14 @@ public class CLI extends Thread {
                 printNodeStats();
                 CSVUtils.writeBreakCSV();
                 resetStats();
+            } else if (fileName.equals("leave 1")) {
+                try {
+                    node.leaveDS();
+                    printNodeStats();
+                    resetStats();
+                } catch (InterruptedException | NotBoundException | IOException e) {
+                    e.printStackTrace();
+                }
             } else if (fileName.equals("simulate -a")) {
                 try {
                     processQueries("queries");
@@ -62,7 +70,7 @@ public class CLI extends Thread {
         node.screen("Total query msgs forwarded: " + node.queriesForwarded);
         node.screen("Total query msgs answered: " + node.queriesAnswered);
         node.screen("========================================================");
-        CSVUtils.writeResults(new CSVUtils.NodeResults(node.queriesReceived,node.queriesForwarded,node.queriesAnswered,node.getNeighbourCount()));
+        CSVUtils.writeResults(new CSVUtils.NodeResults(node.queriesReceived, node.queriesForwarded, node.queriesAnswered, node.getNeighbourCount()));
     }
 
     public void resetStats() {
