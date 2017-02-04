@@ -1,5 +1,6 @@
 package CMS.FT;
 
+import CMS.Util.Configurations;
 import CMS.Util.Neighbour;
 
 import java.io.IOException;
@@ -22,6 +23,14 @@ public class FTMan {
     private String myUsername;
     private String BSIP;
     private int BSPort;
+
+    //=========================Measurements=====================
+
+    public int queriesReceived = 0;
+    public int queriesForwarded = 0;
+    public int queriesAnswered = 0;
+
+    //==========================================================
 
     private UDPClient o_UDPClient;
     private UDPServer o_UDPServer;
@@ -97,6 +106,30 @@ public class FTMan {
         sendDSCommMsg(joinOkMsg, sendIP, sendPort);
     }
 
+    public void sendLEAVE(String sendIP, int sendPort) throws IOException {
+        String leaveMsg = "LEAVE";
+        leaveMsg += " " + getIPAddress() + " " + UDPServerPort;
+        sendDSCommMsg(leaveMsg, sendIP, sendPort);
+    }
+    public void sendSEROK(int noOfFiles, String sendIP, int sendPort, int hops, String fileNames) throws InterruptedException, IOException {
+        String serOkMsg = "SEROK";
+        serOkMsg += " " + noOfFiles;
+        serOkMsg += " " + getIPAddress() + " " + UDPServerPort;
+        serOkMsg += " " + hops + " " + fileNames;
+        sendDSCommMsg(serOkMsg, sendIP, sendPort);
+    }
+
+    public String leaveDS() throws InterruptedException, IOException {
+        String response = sendUNREG();
+        Iterator<Neighbour> i = neighbourList.iterator();
+        while (i.hasNext()) {
+            Neighbour temp = i.next();
+            sendLEAVE(temp.getNeighbourIP(), temp.getNeighbourPort());
+        }
+        return response;
+    }
+
+
     public String sendBSMsg(String message, boolean expectResponse) throws IOException {
         return o_UDPClient.sendBSMsg(this.nodeID, message, expectResponse);
     }
@@ -110,8 +143,8 @@ public class FTMan {
             boolean neighbourExists = false;
             Iterator<Neighbour> i = neighbourList.iterator();
             while (i.hasNext()) {
-                Neighbour temp =i.next();
-                if (nbr.getNeighbourIP().equals(temp.getNeighbourIP()) && nbr.getNeighbourPort() == temp.getNeighbourPort() ) {
+                Neighbour temp = i.next();
+                if (nbr.getNeighbourIP().equals(temp.getNeighbourIP()) && nbr.getNeighbourPort() == temp.getNeighbourPort()) {
                     neighbourExists = true;
                     break;
                 }
@@ -160,18 +193,13 @@ public class FTMan {
 
     private InetAddress discoverMyIP() throws UnknownHostException {
         //replace with IP discovery code
-        InetAddress myIP = InetAddress.getByName("127.0.0.1");
+        InetAddress myIP = InetAddress.getByName(Configurations.NODEIP);
         return myIP;
     }
 
-    public void disconnectBS() throws IOException, InterruptedException {
-        echo("Disconnecting...");
+    public void disconnectBS() throws IOException, InterruptedException{
         sendUNREG();
         o_UDPClient.disconnectBS();
-    }
-
-    protected void readDSMsg(String msg, String senderIP) throws IOException {
-        //override this method to get access to custom msg types.
     }
 
     public String getNodeID() {
@@ -181,14 +209,36 @@ public class FTMan {
     public void echo(String msg) {
         String prefix = new Date().toString() + ": ";
         prefix += this.getNodeID() + ": ";
-        System.out.println(prefix + msg);
+        //System.out.println(prefix + msg);
     }
 
-    public String getIPAddress(){
+    public void screen(String msg) {
+        if (msg == null) {
+            System.out.println();
+        } else {
+            String prefix = new Date().toString() + ": ";
+            prefix += this.getNodeID() + ": ";
+            System.out.println(prefix + msg);
+        }
+    }
+
+    public int getNeighbourCount() {
+        return neighbourList.size();
+    }
+
+    public String findFile(String fileName) {
+        return null;
+    }
+
+    public String getIPAddress() {
         return myIP.getHostAddress();
     }
 
-    public int getUDPServerPort(){
+    public int getUDPServerPort() {
         return UDPServerPort;
+    }
+
+    public void retrieveResult(String fileName, String fileTarget, int targetPort, int hops) {
+
     }
 }

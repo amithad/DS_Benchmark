@@ -114,8 +114,38 @@ public class FTMsgDecoder {
                 ftMan.removeNeighbour(st.nextToken());
                 break;
             }
+
+            case SER: {
+                ftMan.queriesReceived++;
+                ftMan.echo("File request from " + senderIP);
+                String sendIP = st.nextToken();
+                int sendPort = Integer.parseInt(st.nextToken());
+                String fileName = st.nextToken();
+                int hopCount = Integer.parseInt(st.nextToken());
+                String result = ftMan.findFile(fileName);
+                if (!result.equals("")) {
+                    ftMan.queriesAnswered++;
+                    ftMan.echo(fileName + " found. Acknowledging request..");
+                    ftMan.sendSEROK(1, sendIP, sendPort, 5 - hopCount + 1, result);
+                } else if(hopCount != 0){
+                    ftMan.queriesForwarded++;
+                    hopCount--;
+                    String msgToFlood = "SER " + sendIP + " " + sendPort + " " + fileName + " " + hopCount;
+                    ftMan.floodNeighbours(msgToFlood);
+                    ftMan.echo("Requested file is not available. Searching in neighbours..");
+                }
+                break;
+            }
+
+            case SEROK: {
+                int fileCount = Integer.parseInt(st.nextToken());
+                String fileTarget = st.nextToken();
+                int targetPort = Integer.parseInt(st.nextToken());
+                int hops = Integer.parseInt(st.nextToken());
+                String fileName = st.nextToken();
+                ftMan.retrieveResult(fileName,fileTarget,targetPort,hops);
+            }
             default: {
-                ftMan.readDSMsg(msg,senderIP);
                 break;
             }
         }
