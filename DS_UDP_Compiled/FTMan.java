@@ -1,0 +1,244 @@
+//package CMS.FT;
+
+//import CMS.Util.Configurations;
+//import CMS.Util.Neighbour;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+
+/**
+ * Created by amitha on 1/8/17.
+ */
+
+public class FTMan {
+
+    private String nodeID;
+    private InetAddress myIP;
+    private int UDPServerPort;
+    private String myUsername;
+    private String BSIP;
+    private int BSPort;
+
+    //=========================Measurements=====================
+
+    public int queriesReceived = 0;
+    public int queriesForwarded = 0;
+    public int queriesAnswered = 0;
+
+    //==========================================================
+
+    private UDPClient o_UDPClient;
+    private UDPServer o_UDPServer;
+    protected List<Neighbour> neighbourList; //can be modified by Node class.
+
+    private boolean initialized = false;
+
+    public FTMan(String BSIP, int BSPort) throws IOException {
+        this.BSIP = BSIP;
+        this.BSPort = BSPort;
+        o_UDPClient = new UDPClient(BSIP, BSPort, this);
+        neighbourList = new ArrayList<>();
+    }
+
+    protected void startFT() throws IOException, InterruptedException {
+        if (initialized) {
+            echo("Connecting to BootstrapServer at " + BSIP + ":" + BSPort + "...");
+            sendREG();
+        } else
+            echo("Initialize the node before starting!");
+    }
+
+    protected void startServer() throws IOException {
+        if (initialized) {
+            o_UDPServer = new UDPServer(UDPServerPort, this);
+            o_UDPServer.start();
+        } else
+            echo("Initialize the node before starting the server!");
+
+    }
+
+    protected void startHB() {
+        //heartbeat monitor
+    }
+
+    public void initialize(String nodeID, int UDPServerPort, String myUsername) throws UnknownHostException {
+        this.nodeID = nodeID;
+        this.myIP = discoverMyIP();
+        this.UDPServerPort = UDPServerPort;
+        this.myUsername = myUsername;
+        initialized = true;
+    }
+
+    public String sendREG() throws IOException, InterruptedException {
+        //handle registration loop. keep registration attempt count.
+        if (false) this.wait(2000); //wait accordingly
+
+        String regMsg = "REG";
+        regMsg += " " + myIP.getHostAddress() + " " + UDPServerPort + " " + myUsername;
+        String response = sendBSMsg(regMsg, true);
+        FTMsgDecoder.decodeFTMsg(this, response, BSIP);
+        return response;
+    }
+
+    public String sendUNREG() throws IOException, InterruptedException {
+        //handle unreg loop. Keep unreg attempt count
+        String unregMsg = "UNREG";
+        unregMsg += " " + myIP.getHostAddress() + " " + UDPServerPort + " " + myUsername;
+        String response = sendBSMsg(unregMsg, true);
+        FTMsgDecoder.decodeFTMsg(this, response, BSIP);
+        return response;
+    }
+
+    public void sendJOIN(String IP, String sendIP, int sendPort) throws IOException {
+        String joinMsg = "JOIN";
+        joinMsg += " " + myIP.getHostAddress() + " " + UDPServerPort;
+        sendDSCommMsg(joinMsg, sendIP, sendPort);
+    }
+
+    public void sendJOINOK(String sendIP, int sendPort, int responseFlag) throws IOException {
+        String joinOkMsg = "JOINOK";
+        joinOkMsg += " " + responseFlag;
+        sendDSCommMsg(joinOkMsg, sendIP, sendPort);
+    }
+
+    public void sendLEAVE(String sendIP, int sendPort) throws IOException {
+        String leaveMsg = "LEAVE";
+        leaveMsg += " " + getIPAddress() + " " + UDPServerPort;
+        sendDSCommMsg(leaveMsg, sendIP, sendPort);
+    }
+    public void sendSEROK(int noOfFiles, String sendIP, int sendPort, int hops, String fileNames) throws InterruptedException, IOException {
+        String serOkMsg = "SEROK";
+        serOkMsg += " " + noOfFiles;
+        serOkMsg += " " + getIPAddress() + " " + UDPServerPort;
+        serOkMsg += " " + hops + " " + fileNames;
+        sendDSCommMsg(serOkMsg, sendIP, sendPort);
+    }
+
+    public String leaveDS() throws InterruptedException, IOException {
+        String response = sendUNREG();
+        Iterator<Neighbour> i = neighbourList.iterator();
+        while (i.hasNext()) {
+            Neighbour temp = i.next();
+            sendLEAVE(temp.getNeighbourIP(), temp.getNeighbourPort());
+        }
+        return response;
+    }
+
+
+    public String sendBSMsg(String message, boolean expectResponse) throws IOException {
+        return o_UDPClient.sendBSMsg(this.nodeID, message, expectResponse);
+    }
+
+    public void sendDSCommMsg(String msg, String sendIP, int sendPort) throws IOException {
+        o_UDPClient.sendDSCommMsg(msg, sendIP, sendPort);
+    }
+
+    public boolean addNeighbour(Neighbour nbr) throws IOException {
+        if (nbr != null) {
+            boolean neighbourExists = false;
+            Iterator<Neighbour> i = neighbourList.iterator();
+            while (i.hasNext()) {
+                Neighbour temp = i.next();
+                if (nbr.getNeighbourIP().equals(temp.getNeighbourIP()) && nbr.getNeighbourPort() == temp.getNeighbourPort()) {
+                    neighbourExists = true;
+                    break;
+                }
+            }
+            if (!neighbourExists) {
+                neighbourList.add(nbr);
+                echo("New neighbour " + nbr.getNeighbourIP() + ":" + nbr.getNeighbourPort() + " was added successfully.");
+                sendJOIN(myIP.getHostName(), nbr.getNeighbourIP(), nbr.getNeighbourPort());
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean removeNeighbour(String neighbourIP) {
+        Iterator<Neighbour> i = neighbourList.iterator();
+        while (i.hasNext()) {
+            Neighbour n = i.next();
+            if (neighbourIP.equals(n.getNeighbourIP())) {
+                neighbourList.remove(n);
+                echo("Neighbour " + neighbourIP + " is leaving. Routing table updated.");
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public int getNeighbourPort(String neighbourIP) {
+        Iterator<Neighbour> i = neighbourList.iterator();
+        while (i.hasNext()) {
+            Neighbour n = i.next();
+            if (neighbourIP.equals(n.getNeighbourIP())) {
+                return n.getNeighbourPort();
+            }
+        }
+        return 0;
+    }
+
+    public void floodNeighbours(String msg) throws IOException {
+        Iterator<Neighbour> i = neighbourList.iterator();
+        while (i.hasNext()) {
+            Neighbour n = i.next();
+            sendDSCommMsg(msg, n.getNeighbourIP(), n.getNeighbourPort());
+        }
+    }
+
+    private InetAddress discoverMyIP() throws UnknownHostException {
+        //replace with IP discovery code
+        InetAddress myIP = InetAddress.getByName(Configurations.NODEIP);
+        return myIP;
+    }
+
+    public void disconnectBS() throws IOException, InterruptedException{
+        sendUNREG();
+        o_UDPClient.disconnectBS();
+    }
+
+    public String getNodeID() {
+        return nodeID;
+    }
+
+    public void echo(String msg) {
+        String prefix = new Date().toString() + ": ";
+        prefix += this.getNodeID() + ": ";
+        //System.out.println(prefix + msg);
+    }
+
+    public void screen(String msg) {
+        if (msg == null) {
+            System.out.println();
+        } else {
+            String prefix = new Date().toString() + ": ";
+            prefix += this.getNodeID() + ": ";
+            System.out.println(prefix + msg);
+        }
+    }
+
+    public int getNeighbourCount() {
+        return neighbourList.size();
+    }
+
+    public String findFile(String fileName) {
+        return null;
+    }
+
+    public String getIPAddress() {
+        return myIP.getHostAddress();
+    }
+
+    public int getUDPServerPort() {
+        return UDPServerPort;
+    }
+
+    public void retrieveResult(String fileName, String fileTarget, int targetPort, int hops) {
+
+    }
+}
